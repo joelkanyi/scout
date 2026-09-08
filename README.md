@@ -16,6 +16,11 @@ Scout finds jobs from 15+ sources, scores them against your profile using AI, ta
 | Ollama | **Free** | [Download](https://ollama.com/download), then run `ollama pull llama3.2` |
 | Anthropic Claude | ~$5/month | [Get API key](https://console.anthropic.com/settings/keys) |
 
+**For PDF resume export**, install Pango (the DOCX export works without it):
+
+- macOS: `brew install pango`
+- Debian/Ubuntu: `sudo apt-get install libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf2.0-0`
+
 ---
 
 ## Quick Install
