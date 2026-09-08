@@ -121,12 +121,16 @@ if ! command -v node &>/dev/null; then
 fi
 ok "Node.js: $(node --version)"
 
-# ── 6. System deps for WeasyPrint (Linux only) ─────────────────────
+# ── 6. System deps for WeasyPrint (PDF export) ─────────────────────
 if [[ "$OS" == "Linux" ]]; then
     info "Installing system dependencies..."
     sudo apt-get install -y -qq \
         libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf2.0-0 \
-        libffi-dev shared-mime-info 2>/dev/null || warn "Some system deps may be missing — WeasyPrint may not work"
+        libffi-dev shared-mime-info 2>/dev/null || warn "Some system deps may be missing, WeasyPrint may not work"
+    ok "System dependencies installed"
+elif [[ "$OS" == "Darwin" ]]; then
+    info "Installing Pango for PDF export..."
+    brew install pango || warn "Could not install Pango, PDF resume export may not work"
     ok "System dependencies installed"
 fi
 
