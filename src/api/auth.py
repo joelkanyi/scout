@@ -7,8 +7,9 @@ The React UI reads the token from the same file via the settings endpoint.
 
 import secrets
 
-from fastapi import Request, HTTPException
+from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
 
 from src.paths import CONFIG_DIR
 
@@ -48,11 +49,14 @@ class APITokenMiddleware(BaseHTTPMiddleware):
         expected = get_or_create_token()
         auth_header = request.headers.get("Authorization", "")
 
+        # Return a real 401 response. Raising HTTPException inside a
+        # BaseHTTPMiddleware is not caught by FastAPI's exception handler, so
+        # Starlette turns it into a generic 500 that hides the real cause.
         if not auth_header.startswith("Bearer "):
-            raise HTTPException(status_code=401, detail="Missing Authorization header")
+            return JSONResponse(status_code=401, content={"detail": "Missing Authorization header"})
 
         provided = auth_header[7:]  # Strip "Bearer "
         if provided != expected:
-            raise HTTPException(status_code=401, detail="Invalid API token")
+            return JSONResponse(status_code=401, content={"detail": "Invalid API token"})
 
         return await call_next(request)

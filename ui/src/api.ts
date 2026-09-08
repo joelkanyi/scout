@@ -87,7 +87,7 @@ export async function fetchSettings() { return apiFetch(`${BASE}/api/settings`);
 export async function saveSettings(settings: any) { return apiFetch(`${BASE}/api/settings`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(settings) }); }
 export async function validateApiKey(key: string, provider: string = 'anthropic') { return apiFetch(`${BASE}/api/settings/validate-key`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ key, provider }) }); }
 export async function fetchSetupStatus() { return apiFetch(`${BASE}/api/setup/status`); }
-export async function uploadResume(file: File) { const form = new FormData(); form.append('file', file); const res = await fetch(`${BASE}/api/resume/upload`, { method: 'POST', body: form }); if (!res.ok) { const body = await res.text(); let detail = `HTTP ${res.status}`; try { detail = JSON.parse(body)?.detail ?? detail; } catch {} throw new Error(detail); } return res.json(); }
+export async function uploadResume(file: File) { const form = new FormData(); form.append('file', file); return apiFetch(`${BASE}/api/resume/upload`, { method: 'POST', body: form }); }
 export async function saveMasterResume(data: any) { return apiFetch(`${BASE}/api/resume/master`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) }); }
 export async function fetchGapAnalysis() { return apiFetch(`${BASE}/api/resume/gap-analysis`); }
 export async function fetchJobGap(jobId: string) { return apiFetch(`${BASE}/api/resume/gap-analysis/${jobId}`); }
