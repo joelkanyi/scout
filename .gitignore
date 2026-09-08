@@ -54,8 +54,6 @@ CROSS_DOMAIN_AUDIT.md
 ui/node_modules/
 ui/dist/
 
-# Bundled frontend (built from ui/)
-src/api/static/
 
 # Claude Code
 .claude/
