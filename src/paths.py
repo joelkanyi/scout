@@ -15,7 +15,12 @@ def _find_project_root() -> Path:
     Priority:
     1. SCOUT_HOME environment variable (explicit override)
     2. Walk up from this file to find pyproject.toml (dev / editable install)
-    3. Current working directory (fallback for pip-installed usage)
+    3. A stable per-user home (~/.scout) for pip/pipx-installed usage
+
+    Note: the pip-installed fallback is a fixed home, NOT the current working
+    directory. Using the cwd meant the CLI and the web server could resolve
+    different databases when launched from different folders, so `scout setup`
+    and `scout ui` appeared to start from scratch relative to each other.
     """
     if env_root := os.getenv("SCOUT_HOME"):
         return Path(env_root).resolve()
@@ -25,7 +30,7 @@ def _find_project_root() -> Path:
         if (parent / "pyproject.toml").exists():
             return parent
 
-    return Path.cwd()
+    return Path.home() / ".scout"
 
 
 PROJECT_ROOT = _find_project_root()
