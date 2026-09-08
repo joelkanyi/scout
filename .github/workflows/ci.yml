@@ -54,3 +54,25 @@ jobs:
           python-version: "3.12"
       - run: pip install bandit
       - run: bandit -r src/ -ll -q --skip B101
+
+  packaging:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install build
+      - run: python -m build --wheel
+      - name: Assert runtime assets ship in the wheel
+        run: |
+          python - <<'PY'
+          import glob, zipfile, sys
+          whl = sorted(glob.glob("dist/*.whl"))[-1]
+          names = zipfile.ZipFile(whl).namelist()
+          need = ["src/api/static/index.html", "src/resume/templates/resume.html"]
+          missing = [n for n in need if not any(x.endswith(n) for x in names)]
+          if missing:
+              sys.exit(f"MISSING from wheel: {missing}")
+          print("OK: runtime assets present in wheel")
+          PY
