@@ -66,7 +66,7 @@ class Settings(BaseModel):
         if provider == "anthropic":
             return self.anthropic_model or "claude-haiku-4-5-20251001"
         if provider == "gemini":
-            return "gemini-2.0-flash"
+            return "gemini-3.6-flash"
         if provider == "ollama":
             return "llama3.2"
         return ""

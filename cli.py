@@ -695,7 +695,7 @@ def setup() -> None:
             console.print("  Get your free API key at: [cyan]https://aistudio.google.com/app/apikey[/cyan]")
             console.print()
             ai_api_key = typer.prompt("  Paste your Gemini API key")
-            ai_model = "gemini-2.0-flash"
+            ai_model = "gemini-3.6-flash"
         elif choice == "2":
             ai_provider = "ollama"
             ai_model = "llama3.2"
@@ -721,7 +721,7 @@ def setup() -> None:
             ai_provider = "gemini"
             console.print("  Get your free API key at: [cyan]https://aistudio.google.com/app/apikey[/cyan]")
             ai_api_key = typer.prompt("  Paste your Gemini API key")
-            ai_model = "gemini-2.0-flash"
+            ai_model = "gemini-3.6-flash"
 
         # Write .env
         env_lines = [

@@ -99,7 +99,7 @@ def validate_api_key(body: ValidateKeyRequest):
         try:
             import google.generativeai as genai
             genai.configure(api_key=body.key)
-            model = genai.GenerativeModel(model_name="gemini-2.0-flash")
+            model = genai.GenerativeModel(model_name="gemini-3.6-flash")
             model.generate_content("hi", generation_config=genai.types.GenerationConfig(max_output_tokens=10))
             return {"valid": True}
         except Exception as e:
