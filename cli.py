@@ -859,24 +859,21 @@ def _find_playwright_bin() -> str | None:
 
 
 def _check_chromium_installed() -> bool:
-    """Check if Playwright's Chromium browser is installed by looking at the cache."""
-    import subprocess
+    """Return True if Playwright's Chromium browser is already installed.
 
-    pw_bin = _find_playwright_bin()
-    if not pw_bin:
+    Asks Playwright for the resolved executable path and checks it exists.
+    This is version- and platform-independent (it honors
+    PLAYWRIGHT_BROWSERS_PATH and the OS cache location automatically). The old
+    `playwright install --list` subprocess was not a valid subcommand, so the
+    check always failed and setup re-prompted the install on every run.
+    """
+    try:
+        from playwright.sync_api import sync_playwright
+
+        with sync_playwright() as p:
+            return Path(p.chromium.executable_path).exists()
+    except Exception:
         return False
-    result = subprocess.run(
-        [pw_bin, "install", "--list"],
-        capture_output=True, text=True,
-    )
-    if result.returncode != 0:
-        return False
-    # --list shows installed browser paths; check if any chromium directory exists
-    for line in result.stdout.splitlines():
-        stripped = line.strip()
-        if "/chromium-" in stripped and Path(stripped).exists():
-            return True
-    return False
 
 
 def _setup_resume(master_path: Path) -> None:
