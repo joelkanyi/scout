@@ -10,7 +10,7 @@
   body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: 10pt;
-    line-height: 1.35;
+    line-height: 1.5;
     color: #1a1a1a;
     margin: 0;
   }
@@ -44,8 +44,8 @@
     text-transform: uppercase;
     letter-spacing: 1.5px;
     border-bottom: 1px solid #444;
-    padding-bottom: 2px;
-    margin: 11px 0 6px 0;
+    padding-bottom: 3px;
+    margin: 20px 0 10px 0;
     color: #1a1a1a;
   }
 
@@ -54,7 +54,7 @@
     font-size: 9.5pt;
     color: #333;
     margin: 0 0 2px 0;
-    line-height: 1.4;
+    line-height: 1.55;
   }
 
   /* Experience */
@@ -62,7 +62,7 @@
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    margin-bottom: 1px;
+    margin: 14px 0 2px 0;
   }
   .exp-role {
     font-weight: bold;
@@ -80,20 +80,21 @@
     margin-bottom: 1px;
   }
   ul {
-    margin: 2px 0 8px 0;
+    margin: 4px 0 4px 0;
     padding-left: 16px;
   }
   li {
-    margin-bottom: 1.5px;
+    margin-bottom: 6px;
     font-size: 9.5pt;
-    line-height: 1.35;
+    line-height: 1.45;
+    padding-left: 3px;
   }
 
   /* Skills */
   .skills-row {
     font-size: 9.5pt;
     margin-bottom: 1px;
-    line-height: 1.4;
+    line-height: 1.6;
   }
   .skills-row strong {
     font-size: 9.5pt;
@@ -102,14 +103,14 @@
   /* Projects */
   .project {
     font-size: 9.5pt;
-    margin-bottom: 2px;
-    line-height: 1.35;
+    margin-bottom: 8px;
+    line-height: 1.45;
   }
 
   /* Education & Certs */
   .edu-entry {
     font-size: 9.5pt;
-    margin-bottom: 3px;
+    margin-bottom: 7px;
   }
 </style>
 </head>
@@ -132,7 +133,7 @@
 <h2>Experience</h2>
 {% for exp in experience %}
 <div class="exp-header">
-  <span class="exp-role">{{ exp.role }} | {{ exp.company }}</span>
+  <span class="exp-role">{{ exp.role }} | {{ exp.company }}{% if exp.employment_type %} ({{ exp.employment_type }}){% endif %}</span>
   <span class="exp-dates">{{ exp.start_date | format_date }} &ndash; {{ exp.end_date | format_date }}</span>
 </div>
 {% if exp.location %}<div class="exp-location">{{ exp.location }}</div>{% endif %}
@@ -154,14 +155,14 @@
 {% if projects %}
 <h2>Projects</h2>
 {% for proj in projects %}
-<div class="project"><strong>{{ proj.name }}</strong> &mdash; {{ proj.description }}</div>
+<div class="project"><strong>{% if proj.url %}<a href="{{ proj.url }}">{{ proj.name }}</a>{% else %}{{ proj.name }}{% endif %}</strong> &middot; {{ proj.description }}</div>
 {% endfor %}
 {% endif %}
 
 {% if education %}
 <h2>Education</h2>
 {% for edu in education %}
-<div class="edu-entry"><strong>{{ edu.degree }}</strong> &mdash; {{ edu.institution }}{% if edu.year %}, {{ edu.year }}{% endif %}</div>
+<div class="edu-entry"><strong>{{ edu.degree }}</strong>{% if edu.institution %}, {{ edu.institution }}{% endif %}{% if edu.year %}, {{ edu.year }}{% endif %}</div>
 {% endfor %}
 {% endif %}
 
