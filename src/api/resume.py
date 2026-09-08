@@ -257,8 +257,11 @@ def tailor_resume_for_job(job_id: str):
         research_notes=research_notes,
     )
 
-    from src.resume.builder import build_resume
-    resume = build_resume(tailored, job_id, score_val)
+    from src.resume.builder import PdfExportUnavailable, build_resume
+    try:
+        resume = build_resume(tailored, job_id, score_val)
+    except PdfExportUnavailable as e:
+        raise HTTPException(status_code=503, detail=str(e))
 
     cover_path = OUTPUT_DIR / job_id / "cover_letter.txt"
     cover_path.parent.mkdir(parents=True, exist_ok=True)

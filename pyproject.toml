@@ -65,6 +65,7 @@ packages = ["src", "src.scrapers", "src.ai", "src.ai.providers", "src.apply", "s
 
 [tool.setuptools.package-data]
 "src.api" = ["static/**/*"]
+"src.resume" = ["templates/*.html"]
 "*" = ["data/**/*.json"]
 
 [project.scripts]

@@ -11,15 +11,28 @@ from docx import Document
 from docx.shared import Pt
 from jinja2 import Environment, FileSystemLoader
 from rich.console import Console
-from weasyprint import HTML
 
 from src.database import Resume, managed_session
 from src.paths import RESUME_DIR
 
 console = Console()
 
-TEMPLATE_DIR = RESUME_DIR / "templates"
+# A user can override the template by dropping resume.html into their Scout
+# home; otherwise use the copy bundled with the package (works for pip/pipx
+# installs, which do not have the repo's resume/ directory).
+_USER_TEMPLATE_DIR = RESUME_DIR / "templates"
+_PKG_TEMPLATE_DIR = Path(__file__).parent / "templates"
 OUTPUT_DIR = RESUME_DIR / "generated"
+
+
+class PdfExportUnavailable(Exception):
+    """Raised when PDF export cannot run because WeasyPrint's native libs are missing."""
+
+
+def _template_dir() -> Path:
+    if (_USER_TEMPLATE_DIR / "resume.html").exists():
+        return _USER_TEMPLATE_DIR
+    return _PKG_TEMPLATE_DIR
 
 _MONTH_NAMES = [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -64,8 +77,21 @@ def build_pdf(tailored: dict, job_id: str) -> Path:
     out_dir = OUTPUT_DIR / job_id
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    # Deferred, guarded import: WeasyPrint dlopen's Pango/Cairo at import time,
+    # which are absent on a clean machine. Importing at module top turned a
+    # missing system library into a raw 500 for the whole endpoint.
+    try:
+        from weasyprint import HTML
+    except (ImportError, OSError) as e:
+        raise PdfExportUnavailable(
+            "PDF export needs the Pango system library. "
+            "macOS: brew install pango. "
+            "Debian/Ubuntu: apt-get install libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf2.0-0."
+        ) from e
+
+    template_dir = _template_dir()
     env = Environment(  # nosec B701 - templates are internal, not user-uploaded
-        loader=FileSystemLoader(str(TEMPLATE_DIR)),
+        loader=FileSystemLoader(str(template_dir)),
         autoescape=True,
     )
     env.filters["format_date"] = format_date
@@ -73,7 +99,7 @@ def build_pdf(tailored: dict, job_id: str) -> Path:
     try:
         template = env.get_template("resume.html")
     except Exception as e:
-        raise FileNotFoundError(f"Resume template not found at {TEMPLATE_DIR}/resume.html: {e}")
+        raise FileNotFoundError(f"Resume template not found at {template_dir}/resume.html: {e}")
 
     render_data = {**tailored, "skills": _normalize_skills(tailored.get("skills", {}))}
     html_content = template.render(**render_data)
