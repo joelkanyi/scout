@@ -67,6 +67,11 @@ def parse_resume_text(raw_text: str) -> dict:
         )
     except AICallError as e:
         return {"error": str(e), "raw_text": truncated}
+    except Exception as e:  # network, rate limit, provider-specific errors, JSON issues
+        return {"error": f"Could not parse the resume with AI: {e}", "raw_text": truncated}
+
+    if not isinstance(parsed, dict):
+        return {"error": "The AI returned an unexpected format. Try again or enter your resume manually.", "raw_text": truncated}
 
     # Structural validation
     warnings = []

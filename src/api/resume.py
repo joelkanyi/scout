@@ -63,11 +63,18 @@ async def upload_resume_pdf(file: UploadFile):
         )
 
     # Extract text
-    from src.resume.pdf_parser import PDFExtractionError, extract_text_from_pdf
     try:
+        from src.resume.pdf_parser import PDFExtractionError, extract_text_from_pdf
         raw_text = extract_text_from_pdf(contents)
+    except ImportError as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"PDF support is not installed on the server ({e}). Run: pip install pymupdf",
+        )
     except PDFExtractionError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Could not read the PDF: {e}")
 
     # AI parse
     from src.ai.resume_parser import parse_resume_text
