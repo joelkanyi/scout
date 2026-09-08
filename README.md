@@ -2,7 +2,7 @@
 
 **Automated Job Application Platform** — scrape jobs, AI-score them against your resume, get tailored CVs, and auto-apply. Runs locally on your machine. Works for any profession.
 
-Scout finds jobs from 13+ sources, scores them against your profile using AI, tailors your resume for each application, and can auto-fill application forms. Everything runs locally — your data never leaves your machine.
+Scout finds jobs from 15+ sources, scores them against your profile using AI, tailors your resume for each application, and can auto-fill application forms. Everything runs locally — your data never leaves your machine.
 
 ---
 
@@ -202,7 +202,7 @@ This checks everything: Python version, AI provider, database, resume, preferenc
 scout scrape
 ```
 
-This scrapes 13+ job sources (Indeed, LinkedIn, Arbeitnow, RemoteOK, TheMuse, Greenhouse, and more). Tech-specific sources like AndroidJobs and HackerNews only run if your job titles are in technology.
+This scrapes 15+ job sources (Indeed, LinkedIn, Arbeitnow, RemoteOK, Remotive, SmartRecruiters, Greenhouse, TheMuse, and more). Tech-specific sources like AndroidJobs and HackerNews only run if your job titles are in technology.
 
 ### Score jobs with AI
 
@@ -345,7 +345,7 @@ The dashboard will be at http://localhost:8000.
 
 ## How Scoring Works
 
-1. **Scraping** — Scout fetches jobs from 13+ sources and filters them against your preferences (job titles, locations, keywords).
+1. **Scraping** — Scout fetches jobs from 15+ sources and filters them against your preferences (job titles, locations, keywords).
 
 2. **AI Scoring** — Each job description is sent to your AI provider along with your resume summary. The AI returns:
    - `match_score` (0.0 to 1.0) — how well the job matches you
