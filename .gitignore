@@ -62,3 +62,6 @@ src/api/static/
 data/scout.db-shm
 data/scout.db-wal
 data/*.bak
+
+# Local resume backups (personal data)
+resume/*.bak
