@@ -668,9 +668,12 @@ def setup() -> None:
     settings = load_settings()
 
     if settings.effective_provider:
-        provider_name = {"anthropic": "Anthropic", "gemini": "Google Gemini", "ollama": "Ollama"}.get(
-            settings.effective_provider, settings.effective_provider
-        )
+        provider_name = {
+            "anthropic": "Anthropic",
+            "gemini": "Google Gemini",
+            "ollama": "Ollama",
+            "openai_compatible": "OpenAI-compatible",
+        }.get(settings.effective_provider, settings.effective_provider)
         console.print(f"  [green]\u2713[/green] AI provider: {provider_name}")
     else:
         console.print()
@@ -678,15 +681,17 @@ def setup() -> None:
         console.print("  Scout uses AI to score jobs and tailor your resume.")
         console.print()
         console.print("  Choose your AI provider:")
-        console.print("    1) [cyan]Google Gemini[/cyan]     (free, good quality)")
-        console.print("    2) [cyan]Ollama[/cyan]            (free, runs locally on your machine)")
-        console.print("    3) [cyan]Anthropic Claude[/cyan]  (paid, ~$5/month, best quality)")
+        console.print("    1) [cyan]Google Gemini[/cyan]        (free, good quality)")
+        console.print("    2) [cyan]Ollama[/cyan]               (free, runs locally on your machine)")
+        console.print("    3) [cyan]Anthropic Claude[/cyan]     (paid, ~$5/month, best quality)")
+        console.print("    4) [cyan]OpenAI-compatible[/cyan]    (Qwen/DashScope, DeepSeek, OpenAI, Groq, ...)")
         console.print()
-        choice = typer.prompt("  Select (1/2/3)", default="1")
+        choice = typer.prompt("  Select (1/2/3/4)", default="1")
 
         ai_provider = ""
         ai_api_key = ""
         ai_model = ""
+        ai_base_url = ""
 
         if choice == "1":
             ai_provider = "gemini"
@@ -716,6 +721,20 @@ def setup() -> None:
             console.print()
             ai_api_key = typer.prompt("  Paste your API key (starts with sk-ant-)")
             ai_model = "claude-haiku-4-5-20251001"
+        elif choice == "4":
+            ai_provider = "openai_compatible"
+            console.print()
+            console.print("  [bold]OpenAI-compatible endpoint[/bold]")
+            console.print("  Any API that speaks the OpenAI /chat/completions format.")
+            console.print("  Alibaba Qwen (DashScope): base URL")
+            console.print("    [cyan]https://dashscope-intl.aliyuncs.com/compatible-mode/v1[/cyan]  (or dashscope.aliyuncs.com for China)")
+            console.print("    model e.g. [cyan]qwen-plus[/cyan], [cyan]qwen-max[/cyan], [cyan]qwen-turbo[/cyan]")
+            console.print()
+            ai_base_url = typer.prompt(
+                "  Base URL", default="https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
+            )
+            ai_api_key = typer.prompt("  Paste your API key")
+            ai_model = typer.prompt("  Model name", default="qwen-plus")
         else:
             console.print("  [yellow]Invalid choice, defaulting to Gemini.[/yellow]")
             ai_provider = "gemini"
@@ -729,6 +748,7 @@ def setup() -> None:
             f"AI_PROVIDER={ai_provider}",
             f"AI_API_KEY={ai_api_key}",
             f"AI_MODEL={ai_model}",
+            f"AI_BASE_URL={ai_base_url}",
             "",
         ]
 

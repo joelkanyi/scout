@@ -15,6 +15,7 @@ Scout finds jobs from 15+ sources, scores them against your profile using AI, ta
 | Google Gemini | **Free** | [Get API key](https://aistudio.google.com/app/apikey) (takes 30 seconds) |
 | Ollama | **Free** | [Download](https://ollama.com/download), then run `ollama pull llama3.2` |
 | Anthropic Claude | ~$5/month | [Get API key](https://console.anthropic.com/settings/keys) |
+| OpenAI-compatible | Varies | Any OpenAI-style API: Alibaba **Qwen/DashScope**, DeepSeek, OpenAI, Groq. Enter the base URL, key, and model in `scout setup`. |
 
 **For PDF resume export**, install Pango (the DOCX export works without it):
 

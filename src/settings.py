@@ -26,9 +26,10 @@ _lock = threading.Lock()
 
 class Settings(BaseModel):
     # Generic AI provider fields
-    ai_provider: str = Field(default="")   # "anthropic", "gemini", "ollama"
+    ai_provider: str = Field(default="")   # "anthropic", "gemini", "ollama", "openai_compatible"
     ai_api_key: str = Field(default="")    # Provider-specific API key
     ai_model: str = Field(default="")      # Provider-specific model name
+    ai_base_url: str = Field(default="")   # Base URL for the openai_compatible provider
 
     # Legacy Anthropic fields (kept for backward compatibility)
     anthropic_api_key: str = Field(default="")
@@ -90,6 +91,7 @@ def load_settings() -> Settings:
         "ai_provider": "AI_PROVIDER",
         "ai_api_key": "AI_API_KEY",
         "ai_model": "AI_MODEL",
+        "ai_base_url": "AI_BASE_URL",
         "anthropic_api_key": "ANTHROPIC_API_KEY",
         "anthropic_model": "ANTHROPIC_MODEL",
         "notion_token": "NOTION_TOKEN",

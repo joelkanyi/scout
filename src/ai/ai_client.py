@@ -62,6 +62,19 @@ def _get_provider() -> AIProvider:
         from src.ai.providers.ollama_provider import OllamaProvider
         _provider_instance = OllamaProvider(model=model)
 
+    elif provider == "openai_compatible":
+        if not api_key:
+            raise RuntimeError(
+                "API key not configured. Run 'scout setup' to set it up."
+            )
+        base_url = settings.ai_base_url
+        if not base_url:
+            raise RuntimeError(
+                "Base URL not configured for the OpenAI-compatible provider. Run 'scout setup'."
+            )
+        from src.ai.providers.openai_compatible_provider import OpenAICompatibleProvider
+        _provider_instance = OpenAICompatibleProvider(api_key=api_key, model=model, base_url=base_url)
+
     else:
         raise RuntimeError(
             "No AI provider configured. Run 'scout setup' to choose one."
