@@ -27,7 +27,7 @@ Scout finds jobs from 15+ sources, scores them against your profile using AI, ta
 ## Quick Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/joelkanyi/scout/main/install.sh | bash
+curl -fsSL --retry 5 --retry-all-errors https://raw.githubusercontent.com/joelkanyi/scout/main/install.sh | bash
 ```
 
 This installs Python 3.12+, Node.js, all dependencies, and the `scout` command. Takes about 3 minutes.
@@ -415,8 +415,26 @@ scout sheets-sync
 
 ### Common issues
 
+**"zsh: command not found: scout" (right after install)**
+The installer adds `scout` to your PATH only for new shells. Open a new terminal, or run `source ~/.zshrc`. To run it right now without that, use the full path: `~/scout/.venv/bin/scout doctor`.
+
+**Install one-liner fails with "curl: (56) ... 503"**
+That is a temporary GitHub outage on the download host, not your machine. Retry the command (it now retries automatically). If it keeps failing, your network may block `raw.githubusercontent.com`; clone instead: `git clone https://github.com/joelkanyi/scout.git ~/scout && cd ~/scout && bash install.sh`.
+
 **"No AI provider configured"**
 Run `scout setup` and follow the prompts, or edit `.env` manually.
+
+**Switching AI provider (e.g. to Qwen/DashScope or DeepSeek)**
+Run `scout setup --reconfigure`, choose option 4 (OpenAI-compatible), and enter the base URL, key, and model.
+
+**Resume tailoring or PDF export fails / "install Pango"**
+PDF export uses WeasyPrint, which needs the Pango system library. macOS: `brew install pango`. Debian/Ubuntu: `sudo apt-get install libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf2.0-0`. DOCX export works without it.
+
+**AI calls fail with a 404 / "model not available"**
+Your configured model was retired by the provider. Run `scout setup --reconfigure` and pick a current model. `scout doctor` now makes a live test call and flags a dead model directly.
+
+**Moved your data to `~/.scout` and lost your AI key**
+The AI key and model live in `.env`. When migrating an old setup, move it too: `mv <old-folder>/{config,data,resume,.env} ~/.scout/`.
 
 **"ModuleNotFoundError"**
 Make sure you're in the virtual environment: `source .venv/bin/activate`
