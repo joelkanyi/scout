@@ -637,7 +637,11 @@ def apply_jobs(
 
 
 @app.command()
-def setup() -> None:
+def setup(
+    reconfigure: bool = typer.Option(
+        False, "--reconfigure", help="Re-run the AI provider step even if one is already set (e.g. to switch to Qwen)"
+    ),
+) -> None:
     """First-run setup wizard — gets you from zero to scraping in 3 minutes."""
     import subprocess
     import sys
@@ -667,7 +671,7 @@ def setup() -> None:
     env_path = PROJECT_ROOT / ".env"
     settings = load_settings()
 
-    if settings.effective_provider:
+    if settings.effective_provider and not reconfigure:
         provider_name = {
             "anthropic": "Anthropic",
             "gemini": "Google Gemini",
@@ -1169,36 +1173,29 @@ def doctor() -> None:
     settings = load_settings()
     provider = settings.effective_provider
 
-    if provider == "anthropic":
-        key = settings.effective_api_key
-        if key and "xxxx" not in key:
-            console.print(f"  [green]\u2713[/green] AI: Anthropic (sk-ant-...{key[-6:]})")
-        else:
-            console.print("  [red]\u2717[/red] Anthropic API key missing or invalid")
-            console.print("    [dim]Run: scout setup[/dim]")
-            issues += 1
-    elif provider == "gemini":
-        key = settings.effective_api_key
-        if key and "xxxx" not in key:
-            console.print(f"  [green]\u2713[/green] AI: Google Gemini ({settings.effective_model})")
-        else:
-            console.print("  [red]\u2717[/red] Gemini API key missing")
-            console.print("    [dim]Run: scout setup[/dim]")
-            issues += 1
-    elif provider == "ollama":
-        import httpx
-        model = settings.effective_model
-        try:
-            resp = httpx.get("http://localhost:11434/api/tags", timeout=5)
-            resp.raise_for_status()
-            console.print(f"  [green]\u2713[/green] AI: Ollama ({model})")
-        except Exception:
-            console.print("  [red]\u2717[/red] Ollama not running (start with: ollama serve)")
-            issues += 1
-    else:
+    _provider_labels = {
+        "anthropic": "Anthropic",
+        "gemini": "Google Gemini",
+        "ollama": "Ollama",
+        "openai_compatible": "OpenAI-compatible",
+    }
+    if not provider:
         console.print("  [red]\u2717[/red] No AI provider configured")
         console.print("    [dim]Run: scout setup[/dim]")
         issues += 1
+    else:
+        label = _provider_labels.get(provider, provider)
+        # Live check: a tiny real call. This catches a retired model, a bad
+        # key, or a wrong base URL, which a presence-only check misses.
+        try:
+            from src.ai.ai_client import _get_provider, reset_provider
+            reset_provider()
+            _get_provider().call("You are a connectivity test.", "Reply with the single word OK.", 8)
+            console.print(f"  [green]\u2713[/green] AI: {label} ({settings.effective_model}) \u2014 working")
+        except Exception as e:
+            console.print(f"  [red]\u2717[/red] AI: {label} ({settings.effective_model}) \u2014 {str(e)[:70]}")
+            console.print("    [dim]Check your key and model. Run: scout setup --reconfigure[/dim]")
+            issues += 1
 
     # Database
     db_path = DATA_DIR / "scout.db"
@@ -1261,6 +1258,14 @@ def doctor() -> None:
     else:
         console.print("  [yellow]\u25cb[/yellow] Dashboard not built (CLI still works)")
         console.print("    [dim]Run: cd ui && npm install && npm run build[/dim]")
+
+    # PDF export (WeasyPrint needs the Pango native library)
+    try:
+        import weasyprint  # noqa: F401  (import triggers the Pango dlopen)
+        console.print("  [green]\u2713[/green] PDF export ready (WeasyPrint + Pango)")
+    except (ImportError, OSError):
+        console.print("  [yellow]\u25cb[/yellow] PDF export unavailable (DOCX still works)")
+        console.print("    [dim]macOS: brew install pango  |  Debian/Ubuntu: apt-get install libpango-1.0-0 libpangocairo-1.0-0[/dim]")
 
     # Node
     if shutil.which("node"):
