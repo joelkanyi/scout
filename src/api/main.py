@@ -2,9 +2,9 @@
 
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from starlette.staticfiles import StaticFiles
 
 from src.api.applications import router as applications_router
@@ -41,6 +41,18 @@ app.add_middleware(
 
 # Security: require bearer token for all /api/ endpoints
 app.add_middleware(APITokenMiddleware)
+
+
+@app.exception_handler(Exception)
+async def _unhandled_exception(request: Request, exc: Exception):
+    """Return a clear message on any unhandled error instead of a blank 500."""
+    import logging
+    import traceback
+
+    logging.getLogger("scout.api").error(
+        "Unhandled error on %s %s:\n%s", request.method, request.url.path, traceback.format_exc()
+    )
+    return JSONResponse(status_code=500, content={"detail": f"Something went wrong: {exc}"})
 
 # --- API routers (must come before SPA catch-all) ---
 app.include_router(jobs_router, prefix="/api")
