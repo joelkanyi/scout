@@ -53,7 +53,7 @@ ok "Git found"
 if [[ "$OS" == "Darwin" ]]; then
     if ! command -v brew &>/dev/null; then
         info "Installing Homebrew..."
-        NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL --retry 5 --retry-all-errors https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         # Add brew to PATH for this session
         if [[ -f /opt/homebrew/bin/brew ]]; then
             eval "$(/opt/homebrew/bin/brew shellenv)"
@@ -221,6 +221,10 @@ fi
 
 # Make scout available in current session
 export PATH="$SCOUT_BIN:$PATH"
+
+# ── 14. Health check ───────────────────────────────────────────────
+info "Running a health check..."
+"$SCOUT_BIN/scout" doctor || true
 
 # ── Done! ──────────────────────────────────────────────────────────
 echo ""
