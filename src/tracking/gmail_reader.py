@@ -300,7 +300,7 @@ def sync_emails() -> tuple[int, int]:
                         _notify(company, status, parsed.get("notes", ""))
 
             except Exception as e:
-                console.print(f"  [dim]Error processing email {msg_meta.get('id', '?')}: {e}[/dim]")
+                console.print(f"  [dim]Error processing email {msg.get('id', '?')}: {e}[/dim]")
                 continue
 
     return processed, updated
@@ -349,10 +349,20 @@ def detect_ghosted() -> int:
 
 
 def _ensure_application(session, job_id: str) -> Application:
-    """Create a real Application row for a job applied to outside Scout.
+    """Get or create the real Application row for a job applied to outside Scout.
 
-    Flushed so its id is available for events written in the same session.
+    Get-or-create so repeated status emails for the same job reuse one row
+    instead of adding a duplicate. Flushed so its id is available for events
+    written in the same session.
     """
+    existing = (
+        session.query(Application)
+        .filter(Application.job_id == job_id, Application.is_dry_run.is_(False))
+        .first()
+    )
+    if existing is not None:
+        return existing
+
     now = datetime.now(UTC)
     app = Application(
         id=uuid.uuid4().hex,
