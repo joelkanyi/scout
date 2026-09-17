@@ -3,6 +3,7 @@
 import base64
 from datetime import UTC, datetime, timedelta
 
+from google.auth.exceptions import RefreshError
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -47,9 +48,16 @@ def authenticate_gmail() -> Credentials:
         creds = Credentials.from_authorized_user_file(str(TOKEN_PATH), SCOPES)
 
     if not creds or not creds.valid:
+        refreshed = False
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
+            try:
+                creds.refresh(Request())
+                refreshed = True
+            except RefreshError:
+                console.print("  [yellow]Saved Gmail token is no longer valid; re-authorizing.[/yellow]")
+                creds = None
+
+        if not refreshed:
             if not CLIENT_SECRET_PATH.exists():
                 console.print("[red]client_secret.json not found![/red]")
                 console.print(
