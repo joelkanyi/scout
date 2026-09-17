@@ -65,6 +65,19 @@ STATUS_TERMS = [
     "offer",
 ]
 
+# Forward-only status precedence. A later email must not drag an application
+# back to an earlier stage, and terminal outcomes must not be overwritten by a
+# stray "thank you for applying" auto-reply that arrives (or is processed) late.
+STATUS_RANK = {
+    "ghosted": 0,
+    "applied": 1,
+    "under_review": 2,
+    "interview": 3,
+    "offer": 4,
+    "rejected": 4,
+}
+TERMINAL_STATUSES = {"offer", "rejected"}
+
 
 def authenticate_gmail() -> Credentials:
     """Run OAuth flow or refresh existing token. Returns credentials."""
@@ -171,15 +184,24 @@ def sync_emails() -> tuple[int, int]:
                 console.print(f"  [red]Gmail API error: {e}[/red]")
             return 0, 0
 
-        messages = results.get("messages", [])
-        console.print(f"  Found {len(messages)} potential emails")
+        message_ids = results.get("messages", [])
+        console.print(f"  Found {len(message_ids)} potential emails")
 
-        for msg_meta in messages:
+        # Fetch first, then process oldest-first so the newest email wins.
+        fetched = []
+        for msg_meta in message_ids:
             try:
-                msg = service.users().messages().get(
-                    userId="me", id=msg_meta["id"], format="full"
-                ).execute()
+                fetched.append(
+                    service.users().messages().get(
+                        userId="me", id=msg_meta["id"], format="full"
+                    ).execute()
+                )
+            except HttpError as e:
+                console.print(f"  [dim]Error fetching {msg_meta.get('id', '?')}: {e}[/dim]")
+        fetched.sort(key=lambda m: int(m.get("internalDate", 0)))
 
+        for msg in fetched:
+            try:
                 headers = {h["name"]: h["value"] for h in msg["payload"]["headers"]}
                 subject = headers.get("Subject", "")
                 sender = headers.get("From", "")
@@ -226,6 +248,12 @@ def sync_emails() -> tuple[int, int]:
 
                 if parsed.get("notes"):
                     app.notes = parsed["notes"]
+
+                # Forward-only: never regress out of a terminal outcome, and
+                # never drag an application back to an earlier stage.
+                regresses = STATUS_RANK.get(status, 0) < STATUS_RANK.get(app.status, 0)
+                if app.status in TERMINAL_STATUSES or regresses:
+                    continue
 
                 # Only update status and record event if status actually changed
                 if app.status != status:
