@@ -1,6 +1,6 @@
 """We Work Remotely scraper — RSS feed, no key needed."""
 
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from datetime import UTC, datetime
 
 import httpx
@@ -34,7 +34,7 @@ def scrape_weworkremotely() -> tuple[int, int, int]:
                 resp = httpx.get(feed_url, timeout=30)
                 resp.raise_for_status()
 
-                root = ET.fromstring(resp.text)  # nosec B314 - RSS feed from known source
+                root = ET.fromstring(resp.content)  # nosec B314 - RSS feed from known source
                 if root is None:
                     continue
                 items = root.findall(".//item")
