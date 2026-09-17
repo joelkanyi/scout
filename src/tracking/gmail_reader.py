@@ -19,6 +19,9 @@ from src.paths import CREDENTIALS_DIR
 console = Console()
 
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+
+# Safety cap on how many candidate emails a single sync will scan.
+_MAX_MESSAGES = 400
 TOKEN_PATH = CREDENTIALS_DIR / "gmail_token.json"
 CLIENT_SECRET_PATH = CREDENTIALS_DIR / "client_secret.json"
 
@@ -188,12 +191,20 @@ def sync_emails() -> tuple[int, int]:
         # company domains are caught and matched against the jobs table.
         domain_queries = " OR ".join(f"from:{d}" for d in ATS_DOMAINS)
         term_queries = " OR ".join(f'"{t}"' for t in STATUS_TERMS)
-        query = f"(({domain_queries}) OR ({term_queries})) newer_than:14d"
+        query = f"(({domain_queries}) OR ({term_queries})) newer_than:30d"
 
+        # Page through all results (a busy inbox exceeds one 100-message page).
+        message_ids: list[dict] = []
+        page_token = None
         try:
-            results = service.users().messages().list(
-                userId="me", q=query, maxResults=100
-            ).execute()
+            while len(message_ids) < _MAX_MESSAGES:
+                results = service.users().messages().list(
+                    userId="me", q=query, maxResults=100, pageToken=page_token
+                ).execute()
+                message_ids.extend(results.get("messages", []))
+                page_token = results.get("nextPageToken")
+                if not page_token:
+                    break
         except HttpError as e:
             if "accessNotConfigured" in str(e) or e.resp.status == 403:
                 console.print(
@@ -205,7 +216,6 @@ def sync_emails() -> tuple[int, int]:
                 console.print(f"  [red]Gmail API error: {e}[/red]")
             return 0, 0
 
-        message_ids = results.get("messages", [])
         console.print(f"  Found {len(message_ids)} potential emails")
 
         # Fetch first, then process oldest-first so the newest email wins.
