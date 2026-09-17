@@ -9,6 +9,7 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from rich.console import Console
 
 from src.ai.email_parser import parse_email
@@ -155,9 +156,20 @@ def sync_emails() -> tuple[int, int]:
         term_queries = " OR ".join(f'"{t}"' for t in STATUS_TERMS)
         query = f"(({domain_queries}) OR ({term_queries})) newer_than:14d"
 
-        results = service.users().messages().list(
-            userId="me", q=query, maxResults=100
-        ).execute()
+        try:
+            results = service.users().messages().list(
+                userId="me", q=query, maxResults=100
+            ).execute()
+        except HttpError as e:
+            if "accessNotConfigured" in str(e) or e.resp.status == 403:
+                console.print(
+                    "  [red]Gmail API is not enabled for this Google Cloud project.[/red]\n"
+                    "  Enable it, wait ~2 min, then retry:\n"
+                    "  https://console.cloud.google.com/apis/library/gmail.googleapis.com"
+                )
+            else:
+                console.print(f"  [red]Gmail API error: {e}[/red]")
+            return 0, 0
 
         messages = results.get("messages", [])
         console.print(f"  Found {len(messages)} potential emails")
