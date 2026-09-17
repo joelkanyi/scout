@@ -1404,13 +1404,17 @@ def auth_sheets() -> None:
 
 
 @app.command("email-sync")
-def email_sync() -> None:
+def email_sync(
+    days: int = typer.Option(
+        7, "--days", "-d", help="How many days of inbox to scan (larger = slower)."
+    ),
+) -> None:
     """Scan Gmail for application status emails and update pipeline."""
     init_db()
     console.print(Panel("[bold cyan]Scout — Email Sync[/bold cyan]", expand=False))
 
     from src.tracking.gmail_reader import sync_emails
-    processed, updated = sync_emails()
+    processed, updated = sync_emails(days=days)
 
     console.print()
     console.print(

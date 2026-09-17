@@ -156,8 +156,8 @@ def get_gmail_service():
     return build("gmail", "v1", credentials=creds)
 
 
-def sync_emails() -> tuple[int, int]:
-    """Scan inbox for application-related emails. Returns (processed, updated)."""
+def sync_emails(days: int = 7) -> tuple[int, int]:
+    """Scan the last `days` of inbox for application status. Returns (processed, updated)."""
     service = get_gmail_service()
 
     processed = 0
@@ -197,7 +197,7 @@ def sync_emails() -> tuple[int, int]:
         # company domains are caught and matched against the jobs table.
         domain_queries = " OR ".join(f"from:{d}" for d in ATS_DOMAINS)
         term_queries = " OR ".join(f'"{t}"' for t in STATUS_TERMS)
-        query = f"(({domain_queries}) OR ({term_queries})) newer_than:30d"
+        query = f"(({domain_queries}) OR ({term_queries})) newer_than:{days}d"
 
         # Page through all results (a busy inbox exceeds one 100-message page).
         message_ids: list[dict] = []
