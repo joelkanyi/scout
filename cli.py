@@ -1274,12 +1274,28 @@ def doctor() -> None:
     else:
         console.print("  [yellow]\u25cb[/yellow] Node.js not found (needed to rebuild dashboard)")
 
-    # Gmail credentials
+    # Gmail credentials — live check (a stale token passes presence but fails on use)
     gmail_creds = CONFIG_DIR / "credentials" / "gmail_token.json"
-    if gmail_creds.exists():
-        console.print("  [green]\u2713[/green] Gmail connected")
+    if not gmail_creds.exists():
+        console.print("  [dim]○[/dim] Gmail not connected (optional — run: scout auth gmail)")
     else:
-        console.print("  [dim]\u25cb[/dim] Gmail not connected (optional — run: scout auth gmail)")
+        try:
+            from google.auth.transport.requests import Request
+            from google.oauth2.credentials import Credentials
+
+            from src.tracking.gmail_reader import SCOPES
+
+            creds = Credentials.from_authorized_user_file(str(gmail_creds), SCOPES)
+            if creds.valid:
+                console.print("  [green]✓[/green] Gmail connected")
+            elif creds.expired and creds.refresh_token:
+                creds.refresh(Request())
+                gmail_creds.write_text(creds.to_json())
+                console.print("  [green]✓[/green] Gmail connected")
+            else:
+                console.print("  [yellow]○[/yellow] Gmail token invalid — run: scout auth gmail")
+        except Exception:
+            console.print("  [yellow]○[/yellow] Gmail token expired — run: scout auth gmail")
 
     # Summary
     console.print()
