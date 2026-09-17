@@ -1,6 +1,7 @@
 """Gmail API integration -- OAuth setup, inbox scanning, status updates with timeline events."""
 
 import base64
+import uuid
 from datetime import UTC, datetime, timedelta
 
 from google.auth.exceptions import RefreshError
@@ -36,6 +37,31 @@ ATS_DOMAINS = [
     "jazz.co",
     "recruitee.com",
     "applytojob.com",
+    "personio.de",
+    "teamtailor-mail.com",
+    "onlyfy.jobs",
+    "workablemail.com",
+    "deliveryherogroup.com",
+    "swissmarketplace.group",
+    "pinpoint.email",
+    "wise.jobs",
+]
+
+# Generic status language so rejections from custom company domains
+# (not in ATS_DOMAINS) are caught and matched against scraped jobs.
+STATUS_TERMS = [
+    "your application",
+    "thank you for applying",
+    "application received",
+    "regret to inform",
+    "move forward with other candidates",
+    "not moving forward",
+    "not be progressing",
+    "decided not to proceed",
+    "unable to move forward",
+    "interview",
+    "we would like to invite",
+    "offer",
 ]
 
 
@@ -94,30 +120,43 @@ def sync_emails() -> tuple[int, int]:
     updated = 0
 
     with managed_session() as session:
-        # Get company names from applications
-        apps = session.query(Application).filter(Application.is_dry_run.is_(False)).all()
-        applied_job_ids = {a.job_id: a for a in apps}
-
-        companies = []
-        job_company_map: dict[str, tuple[str, Application]] = {}
-
-        for job_id, app in applied_job_ids.items():
-            job = session.get(Job, job_id)
-            if job:
-                companies.append(job.company)
-                job_company_map[job.company.lower().strip()] = (job_id, app)
-
-        if not companies:
-            console.print("  [dim]No applications to track yet.[/dim]")
+        jobs = session.query(Job).all()
+        if not jobs:
+            console.print("  [dim]No jobs in the database yet.[/dim]")
             return 0, 0
 
-        # Build search query -- ATS domains + company names
+        real_apps = (
+            session.query(Application).filter(Application.is_dry_run.is_(False)).all()
+        )
+        app_by_job = {a.job_id: a for a in real_apps}
+
+        # Map each company to one job, preferring a job we applied to, then the
+        # most recently scraped. Company-level matching lets us update status for
+        # jobs applied to OUTSIDE Scout (LinkedIn, Personio, direct email) too.
+        def _rank(job: Job) -> tuple[int, float]:
+            applied = 0 if job.id in app_by_job else 1
+            ts = job.scraped_at.timestamp() if job.scraped_at else 0.0
+            return (applied, -ts)
+
+        job_company_map: dict[str, tuple[str, Application | None]] = {}
+        for job in sorted(jobs, key=_rank):
+            key = job.company.lower().strip()
+            if key and key not in job_company_map:
+                job_company_map[key] = (job.id, app_by_job.get(job.id))
+
+        applied_companies = [
+            job.company for job_id in app_by_job if (job := session.get(Job, job_id))
+        ]
+        companies = applied_companies or [job.company for job in jobs]
+
+        # ATS senders OR generic status language, so rejections from custom
+        # company domains are caught and matched against the jobs table.
         domain_queries = " OR ".join(f"from:{d}" for d in ATS_DOMAINS)
-        company_queries = " OR ".join(f'"{c}"' for c in companies[:20])
-        query = f"({domain_queries} OR {company_queries}) newer_than:7d"
+        term_queries = " OR ".join(f'"{t}"' for t in STATUS_TERMS)
+        query = f"(({domain_queries}) OR ({term_queries})) newer_than:14d"
 
         results = service.users().messages().list(
-            userId="me", q=query, maxResults=50
+            userId="me", q=query, maxResults=100
         ).execute()
 
         messages = results.get("messages", [])
@@ -147,10 +186,13 @@ def sync_emails() -> tuple[int, int]:
                 if not company or not status:
                     continue
 
-                # Find matching application -- exact then fuzzy
+                # Find matching job -- exact then fuzzy. A job applied to
+                # outside Scout has no Application row yet, so create one.
                 job_id, app = _match_company(company, job_company_map)
-                if not job_id or not app:
+                if not job_id:
                     continue
+                if app is None:
+                    app = _ensure_application(session, job_id)
 
                 now = datetime.now(UTC)
 
@@ -199,11 +241,13 @@ def sync_emails() -> tuple[int, int]:
                             "notes": parsed.get("notes", "")[:300],
                         },
                         source="email",
+                        session=session,
                     )
                     record_event(
                         app.id, job_id, "status_changed",
                         {"from": old_status, "to": status, "trigger": "email"},
                         source="email",
+                        session=session,
                     )
 
                     updated += 1
@@ -257,15 +301,37 @@ def detect_ghosted() -> int:
                 app.id, app.job_id, "ghosted",
                 {"days_since_applied": (now - app_date).days},
                 source="scheduler",
+                session=session,
             )
             ghosted_count += 1
 
     return ghosted_count
 
 
+def _ensure_application(session, job_id: str) -> Application:
+    """Create a real Application row for a job applied to outside Scout.
+
+    Flushed so its id is available for events written in the same session.
+    """
+    now = datetime.now(UTC)
+    app = Application(
+        id=uuid.uuid4().hex,
+        job_id=job_id,
+        status="applied",
+        created_at=now,
+        updated_at=now,
+        is_dry_run=False,
+        email_count=0,
+        applied_via="email-detected",
+    )
+    session.add(app)
+    session.flush()
+    return app
+
+
 def _match_company(
     company: str,
-    job_company_map: dict[str, tuple[str, Application]],
+    job_company_map: dict[str, tuple[str, Application | None]],
 ) -> tuple[str | None, Application | None]:
     """Match a company name from email to our applications."""
     company_lower = company.lower().strip()
