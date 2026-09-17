@@ -206,16 +206,25 @@ def record_event(
     event_type: str,
     details: dict | None = None,
     source: str = "bot",
+    session: Session | None = None,
 ) -> None:
-    """Record an application timeline event."""
+    """Record an application timeline event.
+
+    Pass an open `session` to write within the caller's transaction; otherwise a
+    short-lived session is used. Reusing the caller's session avoids a second
+    SQLite writer deadlocking against an in-progress transaction.
+    """
     import json
-    with managed_session() as session:
-        event = ApplicationEvent(
-            application_id=application_id,
-            job_id=job_id,
-            event_type=event_type,
-            timestamp=datetime.now(UTC),
-            details=json.dumps(details) if details else None,
-            source=source,
-        )
+    event = ApplicationEvent(
+        application_id=application_id,
+        job_id=job_id,
+        event_type=event_type,
+        timestamp=datetime.now(UTC),
+        details=json.dumps(details) if details else None,
+        source=source,
+    )
+    if session is not None:
         session.add(event)
+        return
+    with managed_session() as own_session:
+        own_session.add(event)
