@@ -1,6 +1,7 @@
 """Gmail API integration -- OAuth setup, inbox scanning, status updates with timeline events."""
 
 import base64
+import time
 import uuid
 from datetime import UTC, datetime, timedelta
 
@@ -22,6 +23,11 @@ SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
 # Safety cap on how many candidate emails a single sync will scan.
 _MAX_MESSAGES = 400
+
+# Pace fetches under Gmail's ~250 quota-units/user/minute limit (get = 5 units,
+# so ~50/min). ~1.3s between fetches keeps a comfortable margin.
+_FETCH_DELAY_SECONDS = 1.3
+_MAX_FETCH_RETRIES = 5
 TOKEN_PATH = CREDENTIALS_DIR / "gmail_token.json"
 CLIENT_SECRET_PATH = CREDENTIALS_DIR / "client_secret.json"
 
@@ -219,16 +225,13 @@ def sync_emails() -> tuple[int, int]:
         console.print(f"  Found {len(message_ids)} potential emails")
 
         # Fetch first, then process oldest-first so the newest email wins.
+        # Throttle to stay under Gmail's ~250 quota-units/user/minute limit.
         fetched = []
         for msg_meta in message_ids:
-            try:
-                fetched.append(
-                    service.users().messages().get(
-                        userId="me", id=msg_meta["id"], format="full"
-                    ).execute()
-                )
-            except HttpError as e:
-                console.print(f"  [dim]Error fetching {msg_meta.get('id', '?')}: {e}[/dim]")
+            msg = _fetch_message(service, msg_meta["id"])
+            if msg is not None:
+                fetched.append(msg)
+            time.sleep(_FETCH_DELAY_SECONDS)
         fetched.sort(key=lambda m: int(m.get("internalDate", 0)))
 
         for msg in fetched:
@@ -381,6 +384,24 @@ def detect_ghosted() -> int:
             ghosted_count += 1
 
     return ghosted_count
+
+
+def _fetch_message(service, msg_id: str) -> dict | None:
+    """Fetch one full message, backing off on Gmail rate-limit errors."""
+    delay = 2.0
+    for attempt in range(_MAX_FETCH_RETRIES):
+        try:
+            return service.users().messages().get(
+                userId="me", id=msg_id, format="full"
+            ).execute()
+        except HttpError as e:
+            if "rateLimitExceeded" in str(e) and attempt < _MAX_FETCH_RETRIES - 1:
+                time.sleep(delay)
+                delay *= 2
+                continue
+            console.print(f"  [dim]Error fetching {msg_id}: {e}[/dim]")
+            return None
+    return None
 
 
 def _ensure_job_from_email(session, company: str, role: str) -> str:
