@@ -63,7 +63,28 @@ STATUS_TERMS = [
     "interview",
     "we would like to invite",
     "offer",
+    # Non-English, so rejections from custom foreign domains still surface.
+    "Bewerbung",
+    "leider",
+    "Absage",
+    "Vorstellungsgespräch",
+    "candidature",
+    "malheureusement",
+    "entretien",
+    "candidatura",
+    "lamentamos",
+    "entrevista",
+    "purtroppo",
+    "colloquio",
 ]
+
+# Legal-entity and generic tokens dropped before matching a company name, so an
+# email from "HolidayCheck" matches a job at "HolidayCheck Group AG".
+_COMPANY_STOPWORDS = {
+    "ag", "gmbh", "inc", "ltd", "llc", "co", "corp", "plc", "se", "srl", "sarl",
+    "bv", "sa", "nv", "oy", "ab", "as", "kg", "spa", "sl", "pvt", "pte", "group",
+    "holding", "holdings", "the",
+}
 
 # Forward-only status precedence. A later email must not drag an application
 # back to an earlier stage, and terminal outcomes must not be overwritten by a
@@ -154,7 +175,7 @@ def sync_emails() -> tuple[int, int]:
 
         job_company_map: dict[str, tuple[str, Application | None]] = {}
         for job in sorted(jobs, key=_rank):
-            key = job.company.lower().strip()
+            key = _normalize_company(job.company)
             if key and key not in job_company_map:
                 job_company_map[key] = (job.id, app_by_job.get(job.id))
 
@@ -220,13 +241,17 @@ def sync_emails() -> tuple[int, int]:
                 if not company or not status:
                     continue
 
-                # Find matching job -- exact then fuzzy. A job applied to
-                # outside Scout has no Application row yet, so create one.
+                # Find matching job. If none, this is an application made
+                # outside Scout, so create a job entry for it so it's tracked.
                 job_id, app = _match_company(company, job_company_map)
                 if not job_id:
-                    continue
+                    job_id = _ensure_job_from_email(
+                        session, company, parsed.get("role", "")
+                    )
+                    app = None
                 if app is None:
                     app = _ensure_application(session, job_id)
+                job_company_map[_normalize_company(company)] = (job_id, app)
 
                 now = datetime.now(UTC)
 
@@ -348,6 +373,34 @@ def detect_ghosted() -> int:
     return ghosted_count
 
 
+def _ensure_job_from_email(session, company: str, role: str) -> str:
+    """Get or create a Job for a company applied to outside Scout.
+
+    Lets email-sync track applications Scout never scraped (LinkedIn, Personio,
+    direct email). Deduped by normalized company across email-created jobs.
+    """
+    norm = _normalize_company(company)
+    for job in session.query(Job).filter(Job.source == "email").all():
+        if _normalize_company(job.company) == norm:
+            return job.id
+
+    job_id = uuid.uuid4().hex
+    job = Job(
+        id=job_id,
+        title=role or "Application (via email)",
+        company=company,
+        location="",
+        source="email",
+        url="",
+        jd_text="",
+        status="applied",
+        scraped_at=datetime.now(UTC),
+    )
+    session.add(job)
+    session.flush()
+    return job_id
+
+
 def _ensure_application(session, job_id: str) -> Application:
     """Get or create the real Application row for a job applied to outside Scout.
 
@@ -379,29 +432,49 @@ def _ensure_application(session, job_id: str) -> Application:
     return app
 
 
+def _normalize_company(name: str) -> str:
+    """Lowercase, drop punctuation, and strip legal/generic tokens for matching."""
+    import re
+
+    cleaned = re.sub(r"[^\w\s]", " ", name.lower())
+    tokens = [t for t in cleaned.split() if t and t not in _COMPANY_STOPWORDS]
+    return " ".join(tokens)
+
+
 def _match_company(
     company: str,
     job_company_map: dict[str, tuple[str, Application | None]],
 ) -> tuple[str | None, Application | None]:
-    """Match a company name from email to our applications."""
-    company_lower = company.lower().strip()
+    """Match a company name from an email to a job.
 
-    # Exact match
-    if company_lower in job_company_map:
-        return job_company_map[company_lower]
+    Keys in job_company_map are already normalized. Matches on normalized
+    equality, then on token-subset (either direction) preferring the most
+    shared tokens, so "HolidayCheck" resolves to "HolidayCheck Group AG".
+    """
+    target = _normalize_company(company)
+    if not target:
+        return None, None
 
-    # Fuzzy match -- require significant overlap
+    if target in job_company_map:
+        return job_company_map[target]
+
+    t_tokens = set(target.split())
+    if not any(len(t) >= 3 for t in t_tokens):
+        return None, None
+
     best_match = None
-    best_score = 0
+    best_overlap = 0
     for key, value in job_company_map.items():
-        if company_lower in key or key in company_lower:
-            score = min(len(company_lower), len(key)) / max(len(company_lower), len(key))
-            # Require at least 70% overlap AND minimum 3 chars to avoid false positives
-            if score > best_score and score >= 0.7 and min(len(company_lower), len(key)) >= 3:
-                best_score = score
+        k_tokens = set(key.split())
+        if not k_tokens:
+            continue
+        if t_tokens <= k_tokens or k_tokens <= t_tokens:
+            overlap = len(t_tokens & k_tokens)
+            if overlap > best_overlap:
+                best_overlap = overlap
                 best_match = value
 
-    if best_match:
+    if best_match and best_overlap >= 1:
         return best_match
     return None, None
 
