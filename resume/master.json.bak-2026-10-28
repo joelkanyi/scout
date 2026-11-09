@@ -1,0 +1,347 @@
+{
+  "personal": {
+    "name": "Joel Kanyi",
+    "email": "joelkanyi98@gmail.com",
+    "phone": "+254 706 003 891",
+    "location": "Nairobi, Kenya",
+    "linkedin": "https://www.linkedin.com/in/joelkanyi/",
+    "github": "https://github.com/joelkanyi",
+    "website": "https://x.com/_joelkanyi"
+  },
+  "summary": "Senior Android Engineer with 4 years shipping PayGo fintech and field-operations apps used by 50,000+ agents across five African markets (Kenya, Uganda, Tanzania, Nigeria, Zambia), with 500K+ Google Play downloads. Deep in Kotlin, Jetpack Compose, and modularization at scale (95+ and 100+ module codebases), with offline-first engineering for low-end devices and unreliable networks. Hands-on across mobile-money payments (M-Pesa STK Push, Paystack), eKYC and identity verification (NIDA, Smile ID), CI/CD, and design-system development. Kotlin Multiplatform open-source author: 4 libraries on Maven Central and 1,700+ GitHub stars. Open to remote and relocation.",
+  "experience": [
+    {
+      "role": "Senior Android Engineer",
+      "company": "d.light",
+      "location": "Nairobi, Kenya",
+      "start_date": "2022-08",
+      "end_date": "present",
+      "bullets": [
+        {
+          "text": "Among the top contributors by commit volume on Atlas, d.light's field-sales Android app used by 50,000+ agents and collection officers across Kenya, Uganda, Tanzania, Nigeria, Zambia and partner markets: a 95-module Kotlin/Jetpack Compose clean-architecture codebase (100K+ downloads, 4.5-star on Google Play), built by a team of around 20 engineers.",
+          "tags": [
+            "Jetpack Compose",
+            "Clean Architecture",
+            "Modularization",
+            "MVI"
+          ]
+        },
+        {
+          "text": "Rebuilt core surfaces of the customer app (dashboard, loyalty points, payments, notifications, authentication) during its ground-up rewrite to a 100+ module Compose/MVI architecture; the app has 500K+ downloads and a 4.4-star rating (25K+ reviews).",
+          "tags": [
+            "Jetpack Compose",
+            "MVI",
+            "Modularization",
+            "Google Play"
+          ]
+        },
+        {
+          "text": "Sustained 99.7% crash-free sessions across 50,000+ field users on Atlas, cutting crash volume around 43% over recent releases through offline-sync and stability fixes.",
+          "tags": [
+            "Firebase Crashlytics",
+            "Stability",
+            "Performance"
+          ]
+        },
+        {
+          "text": "Engineered offline-first PayGo token issuance and sync with Room and WorkManager (16 background workers, 200+ DAO/entity definitions), keeping the app reliable on 2G and intermittent field connectivity.",
+          "tags": [
+            "Room",
+            "WorkManager",
+            "Coroutines",
+            "Offline-first"
+          ]
+        },
+        {
+          "text": "Introduced CI/CD from scratch (Bitbucket Pipelines): automated linting, tests, per-merge QA builds, and Firebase App Distribution releases, replacing a manual process that cost around two days per sprint release.",
+          "tags": [
+            "CI/CD",
+            "Bitbucket Pipelines",
+            "Firebase",
+            "Automation"
+          ]
+        },
+        {
+          "text": "Built and maintain two Compose design systems: a shared library published to Maven via GitHub Actions and consumed by Atlas, and Bento, built for the customer app's distinct brand, standardizing components, theming, and typography across both apps.",
+          "tags": [
+            "Design System",
+            "Jetpack Compose",
+            "Maven",
+            "GitHub Actions"
+          ]
+        },
+        {
+          "text": "Standardized build configuration across the 95+ module codebases with custom Gradle convention plugins and version catalogs, and enforced architecture with Konsist conformance tests; led Hilt DI adoption and app-wide observability (Mixpanel, PostHog, Firebase Crashlytics).",
+          "tags": [
+            "Gradle",
+            "Konsist",
+            "Hilt",
+            "Observability"
+          ]
+        },
+        {
+          "text": "Integrated mobile-money payment rails as dedicated modules (M-Pesa STK Push and Paystack) alongside PayGo token payments and device temporary-unlock flows.",
+          "tags": [
+            "Payments",
+            "M-Pesa",
+            "Paystack",
+            "REST"
+          ]
+        },
+        {
+          "text": "Implemented eKYC customer onboarding with a CameraX barcode and national-ID capture pipeline (custom image analyzers), integrated with NIDA and Smile ID identity verification for Kenya and Nigeria.",
+          "tags": [
+            "CameraX",
+            "eKYC",
+            "Identity Verification"
+          ]
+        },
+        {
+          "text": "Mentored junior engineers in testing, architecture, and code review.",
+          "tags": [
+            "Mentoring",
+            "TDD"
+          ]
+        },
+        {
+          "text": "Drove the XML-to-Jetpack-Compose migration across both flagship apps.",
+          "tags": [
+            "Jetpack Compose",
+            "Migration"
+          ]
+        },
+        {
+          "text": "Built a Point of Sale feature for external agents and partners and a referral system for agents to refer agents and earn commissions.",
+          "tags": [
+            "POS",
+            "Referral"
+          ]
+        },
+        {
+          "text": "Shipped 380+ features and fixes to production over four years across payments, KYC, loyalty, and field operations.",
+          "tags": [
+            "Delivery",
+            "Google Play"
+          ]
+        },
+        {
+          "text": "Implemented secure authentication including biometric login and encrypted storage using AndroidX Security.",
+          "tags": [
+            "BiometricPrompt",
+            "Security"
+          ]
+        }
+      ]
+    },
+    {
+      "role": "Mobile Application Developer",
+      "company": "Kurasa Africa",
+      "location": "Nairobi, Kenya",
+      "start_date": "2022-04",
+      "end_date": "2024-12",
+      "bullets": [
+        {
+          "text": "Built the Kurasa for Parents app for Android and iOS using Kotlin Multiplatform for shared business logic and Compose Multiplatform for cross-platform UI, on an EdTech platform for teacher assessments and student-progress reporting.",
+          "tags": [
+            "Kotlin Multiplatform",
+            "Compose Multiplatform",
+            "Ktor",
+            "SQLDelight"
+          ]
+        },
+        {
+          "text": "Delivered real-time student-progress tracking and parent-school communication features to improve engagement.",
+          "tags": [
+            "Real-time",
+            "Networking",
+            "Firebase"
+          ]
+        },
+        {
+          "text": "Optimized performance across Android and iOS and set up engineering tooling: Spotless and ktlint, Renovate dependency automation, and an automated version-bump and release workflow.",
+          "tags": [
+            "Performance",
+            "Spotless",
+            "ktlint",
+            "CI/CD"
+          ]
+        }
+      ],
+      "employment_type": "Part-time"
+    },
+    {
+      "role": "Android Developer",
+      "company": "Pango Africa Limited",
+      "location": "Nairobi, Kenya",
+      "start_date": "2022-04",
+      "end_date": "2022-07",
+      "bullets": [
+        {
+          "text": "Enhanced e-commerce apps (seller, buyer, delivery) with Kotlin, MVVM, and Room.",
+          "tags": [
+            "Kotlin",
+            "MVVM",
+            "Room"
+          ]
+        },
+        {
+          "text": "Migrated legacy Java/AsyncTask code to Kotlin, Coroutines, and MVVM, improving stability and maintainability.",
+          "tags": [
+            "Kotlin",
+            "Coroutines",
+            "MVVM",
+            "Migration"
+          ]
+        }
+      ]
+    }
+  ],
+  "skills": [
+    "Kotlin",
+    "Java",
+    "SQL",
+    "Jetpack Compose",
+    "Coroutines",
+    "Flow",
+    "Room",
+    "DataStore",
+    "WorkManager",
+    "Paging 3",
+    "Dagger Hilt",
+    "Retrofit",
+    "CameraX",
+    "Compose Navigation",
+    "Kotlin Multiplatform",
+    "Compose Multiplatform",
+    "Ktor",
+    "SQLDelight",
+    "Koin",
+    "Clean Architecture",
+    "MVVM",
+    "MVI",
+    "Modularization",
+    "Design Systems",
+    "Gradle",
+    "Convention Plugins",
+    "Version Catalogs",
+    "JUnit",
+    "Turbine",
+    "Espresso",
+    "Konsist",
+    "ktlint",
+    "TDD",
+    "CI/CD",
+    "Bitbucket Pipelines",
+    "GitHub Actions",
+    "Fastlane",
+    "Firebase (Crashlytics/Analytics)",
+    "Google Play Console",
+    "REST APIs",
+    "Android Security (Biometric, Encrypted Storage)",
+    "Mentoring",
+    "Flutter (familiar)",
+    "Dart (familiar)",
+    "Swift/SwiftUI (familiar)",
+    "TypeScript (familiar)"
+  ],
+  "education": [
+    {
+      "degree": "B.Sc. Computer Science (Software Engineering)",
+      "institution": "Kibabii University",
+      "year": "2018 - 2022"
+    },
+    {
+      "degree": "Google Africa Developer Scholarship (GADS) - Android Development Specialization",
+      "institution": "Google",
+      "year": "2022"
+    }
+  ],
+  "projects": [
+    {
+      "name": "FocusBloom (583★)",
+      "description": "Kotlin Multiplatform productivity app for Android, iOS, and Desktop using SQLDelight, Koin, and type-safe Compose Navigation. My most-starred project.",
+      "tags": [
+        "Kotlin Multiplatform",
+        "Compose Multiplatform",
+        "SQLDelight"
+      ],
+      "url": "https://github.com/joelkanyi/FocusBloom"
+    },
+    {
+      "name": "Kompose Country Code Picker (297★, Maven Central)",
+      "description": "Compose Multiplatform country-code picker for Android, iOS, Desktop, JS, and WasmJS: 250+ countries, phone validation and formatting, 13 translations. Published as io.github.joelkanyi:komposecountrycodepicker.",
+      "tags": [
+        "Compose Multiplatform",
+        "Maven Central",
+        "Material Design"
+      ],
+      "url": "https://github.com/joelkanyi/kompose-country-code-picker"
+    },
+    {
+      "name": "Sain (233★, Maven Central)",
+      "description": "Compose Multiplatform signature-capture library exporting to ImageBitmap, PNG, and Base64 across Android, iOS, Desktop, JS, and WasmJS. Published as io.github.joelkanyi:sain.",
+      "tags": [
+        "Compose Multiplatform",
+        "Maven Central",
+        "Library"
+      ],
+      "url": "https://github.com/joelkanyi/sain"
+    },
+    {
+      "name": "Kepler",
+      "description": "Navigation-agnostic deep link engine for Kotlin Multiplatform with an OkHttp-inspired interceptor/chain API, sealed-interface outcomes, and a separate testing artifact. Design-first (DESIGN.md before code), binary-compat validated, published under io.github.joelkanyi.",
+      "tags": [
+        "Kotlin Multiplatform",
+        "Library",
+        "API Design"
+      ],
+      "url": "https://github.com/joelkanyi/kepler"
+    },
+    {
+      "name": "Jenga (Maven Central)",
+      "description": "Kotlin Multiplatform Compose design-system library (brandable tokens and blocks) for Android, iOS, and Desktop. Published as io.github.joelkanyi:jenga with binary-compatibility validation.",
+      "tags": [
+        "Compose Multiplatform",
+        "Design System",
+        "Maven Central"
+      ]
+    },
+    {
+      "name": "PikaPal",
+      "description": "Offline-first Kotlin Multiplatform meal-planning app with Room as source of truth, Ktor, and a Supabase backend (Postgres + Edge Functions). Strict api/impl capability modularization and Gradle convention plugins.",
+      "tags": [
+        "Kotlin Multiplatform",
+        "Room",
+        "Supabase",
+        "Offline-first"
+      ]
+    },
+    {
+      "name": "Muviz (297★)",
+      "description": "Native Android movies/TV app on the TMDB API using Jetpack Compose, MVVM, Paging 3, Room, DataStore, Retrofit, and Hilt.",
+      "tags": [
+        "Jetpack Compose",
+        "MVVM",
+        "Paging 3"
+      ],
+      "url": "https://github.com/joelkanyi/Muviz"
+    },
+    {
+      "name": "Joomia (148★)",
+      "description": "Jetpack Compose shopping app built on clean architecture, consuming the Fake Store API. One of several open-source Android apps demonstrating architecture patterns (also StarWars 49★, NewsApp 84★).",
+      "tags": [
+        "Jetpack Compose",
+        "Clean Architecture",
+        "MVVM"
+      ],
+      "url": "https://github.com/joelkanyi/Joomia"
+    }
+  ],
+  "certifications": [
+    "Google Developer Student Clubs (GDSC) Lead, Kibabii University (2021–2022)"
+  ],
+  "languages": [
+    "English",
+    "Swahili"
+  ]
+}
